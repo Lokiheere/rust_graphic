@@ -1,112 +1,39 @@
-use std::sync::Arc;
-use vulkano::
-{
-    instance::{Instance, InstanceCreateInfo},
-    VulkanLibrary,
-    device::{QueueFlags, Device, DeviceCreateInfo, QueueCreateInfo},
-    memory::allocator::StandardMemoryAllocator,
-    buffer::{Buffer, BufferCreateInfo, BufferUsage},
-    memory::allocator::{AllocationCreateInfo, MemoryTypeFilter}
-};
+extern crate glium;
+extern crate winit;
 
-use vulkano::buffer::BufferContents;
+use glium::Surface;
+use winit::event::{Event, WindowEvent};
 
-#[derive(BufferContents)]
-#[repr(C)]
-struct MyStruct {
-    a: u32,
-    b: u32,
-}
+const WIDTH: u32 = 800;
+const HEIGHT: u32 = 720;
 
-pub fn graphic() {
-    let library = VulkanLibrary::new().expect("no local Vulkan library/DLL");
-    let instance = Instance::new(library, InstanceCreateInfo::default())
-        .expect("failed to create instance");
+pub fn build() {
+    //infinite loop
+    let event_loop: winit::event_loop::EventLoop<()> =
+        winit::event_loop::EventLoopBuilder::new().build();
 
-    let physical_device = instance
-        .enumerate_physical_devices()
-        .expect("could not enumerate devices")
-        .next()
-        .expect("no devices available");
+    //Helps build window
+    let (_window, display) =
+        glium::backend::glutin::SimpleWindowBuilder::new()
+            .with_title("Glium_Window")
+            .with_inner_size(WIDTH, HEIGHT)
+            .build(&event_loop);
 
-    for family in physical_device.queue_family_properties() {
-        println!("Found a queue family with {:?} queue(s)", family.queue_count);
-    }
+    let mut frame = display.draw();
+    frame.clear_color(0.0, 0.0, 1.0, 1.0);
+    frame.finish().unwrap();
 
-    let queue_family_index = physical_device
-        .queue_family_properties()
-        .iter()
-        .enumerate()
-        .position(|(_queue_family_index, queue_family_properties)| {
-            queue_family_properties.queue_flags.contains(QueueFlags::GRAPHICS)
-        })
-        .expect("couldn't find a graphical queue family") as u32;
-
-    let (device, mut queues) = Device::new(
-        physical_device,
-        DeviceCreateInfo {
-            // here we pass the desired queue family to use by index
-            queue_create_infos: vec![QueueCreateInfo {
-                queue_family_index,
-                ..Default::default()
-            }],
-            ..Default::default()
-        },
-    )
-        .expect("failed to create device");
-
-    let memory_allocator = Arc::new(StandardMemoryAllocator::new_default(device.clone()));
-
-    let data: i32 = 12;
-    let buffer = Buffer::from_data(
-        memory_allocator.clone(),
-        BufferCreateInfo {
-            usage: BufferUsage::UNIFORM_BUFFER,
-            ..Default::default()
-        },
-        AllocationCreateInfo {
-            memory_type_filter: MemoryTypeFilter::PREFER_DEVICE
-                | MemoryTypeFilter::HOST_SEQUENTIAL_WRITE,
-            ..Default::default()
-        },
-        data,
-    )
-        .expect("failed to create buffer");
-
-    let data = MyStruct { a: 5, b: 69 };
-
-    let buffer = Buffer::from_data(
-        memory_allocator.clone(),
-        BufferCreateInfo {
-            usage: BufferUsage::UNIFORM_BUFFER,
-            ..Default::default()
-        },
-        AllocationCreateInfo {
-            memory_type_filter: MemoryTypeFilter::PREFER_DEVICE
-                | MemoryTypeFilter::HOST_SEQUENTIAL_WRITE,
-            ..Default::default()
-        },
-        data,
-    )
-        .unwrap();
-
-    let iter = (0..128).map(|_| 5u8);
-    let buffer = Buffer::from_iter(
-            memory_allocator.clone(),
-            BufferCreateInfo {
-                usage: BufferUsage::UNIFORM_BUFFER,
-                ..Default::default()
+    event_loop.run(move |event, _, controlflow| {
+        match event {
+            Event::WindowEvent {
+                event: WindowEvent::CloseRequested,
+                ..
+            } => {
+                println!("The close button was pressed; stopping");
+                controlflow.set_exit();
             },
-            AllocationCreateInfo {
-                memory_type_filter: MemoryTypeFilter::PREFER_DEVICE
-                    | MemoryTypeFilter::HOST_SEQUENTIAL_WRITE,
-                ..Default::default()
-            },
-            iter,
-
-    ).unwrap();
+            _ => ()
+        }
+    });
 }
-
-
-
 

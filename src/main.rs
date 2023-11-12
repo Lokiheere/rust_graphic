@@ -1,11 +1,7 @@
 mod renderer;
 
-use renderer::window::create;
-use renderer::graphic::graphic;
+use crate::renderer::graphic::build;
 
-fn main ()
-{
-    env_logger::init();
-    create();
-    graphic();
+fn main() {
+    build();
 }
