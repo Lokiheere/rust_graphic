@@ -1,6 +1,9 @@
 mod renderer;
-use crate::renderer::graphic::build;
+use crate::renderer::{
+    graphic::build,
+    graphic2::build_teapot,
+};
 
 fn main() {
-    build();
+    build_teapot();
 }
