@@ -13,7 +13,7 @@ use winit::event::{Event, WindowEvent};
 const WIDTH: u32 = 800;
 const HEIGHT: u32 = 720;
 
-pub fn build() {
+pub fn build_triangle() {
     //infinite loop
     let event_loop: winit::event_loop::EventLoop<()> =
         winit::event_loop::EventLoopBuilder::new().build();
